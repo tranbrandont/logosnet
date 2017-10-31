@@ -1,0 +1,5 @@
+1. In this assignment, we are creating a server and client for an online chat application. Clients will send and receive messages up to 1000 characters at a time in real time, and the server must support up to 255 clients. Multiple events can happen at any time, and the program must be ready for each of those right as they happen, so I will need to implement select. 
+
+2. I think that being able to support multiple real time connections will be the most challenging part of the assignment. Learning how to use select and using that instead of just recv with waitall will be challenging as I'd be learning how to use this function. 
+
+3. I plan on going on stackoverflow, googling my questions, and talking to you if I ever get stuck on something in my program.
