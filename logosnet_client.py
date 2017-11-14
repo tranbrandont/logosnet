@@ -14,7 +14,6 @@ def chat_client(port, ipnum):
     while 1:
         message = input()
         message = bytes(message, 'utf-8')
-        message = struct.pack('!s', message)
         sock.send(message)
 
 

@@ -4,6 +4,7 @@ import socket
 import argparse
 import select
 import struct
+import os
 
 SOCK_LIST  = []
 
@@ -26,10 +27,9 @@ def chat_server(port, ipnum):
                 broadcast(serv_sock, con, "[%s:%s] entered our chatting room\n" %_addr)
             else:
                 try:
-                    data = sock.recv(10000)
+                    data = sock.recv(1000)
                     if data:
-                        data = struct.unpack('!s', data)
-                        data = data[0].decode("utf-8")
+                        data = data.decode("utf-8")
                         print(data)
                         broadcast(serv_sock, sock, "\r" + '[' + str(sock.getpeername()) + '] ' + data)
                     else:
@@ -39,14 +39,16 @@ def chat_server(port, ipnum):
                 except:
                     broadcast(serv_sock, sock, "Client (%s, %s) is offline\n" % _addr)
                     continue
+
     serv_sock.close()
+
 
 
 
 
 def broadcast(serv_sock, sock, message):
     for sockpeer in SOCK_LIST:
-        if sockpeer != serv_sock and sockpeer != sock :
+        if sockpeer != serv_sock and sockpeer != sock:
             try:
                 sockpeer.send(message)
             except:
