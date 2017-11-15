@@ -7,14 +7,31 @@ import struct
 SOCK_LIST  = []
 
 def chat_client(port, ipnum):
-    sock=socket.socket()
+    sock = socket.socket()
     if ipnum is None:
         ipnum = socket.gethostname()
-    sock.connect((ipnum, port))
+    try:
+        sock.connect((ipnum, port))
+    except:
+        print("Unable to connect")
+        sys.exit()
     while 1:
-        message = input()
-        message = bytes(message, 'utf-8')
-        sock.send(message)
+        socket_list = [sys.stdin, sock]
+
+        read, write, error = select.select(socket_list, [], [])
+
+        for sockpeer in read:
+            if sockpeer == sock:
+                data = sock.recv(4096)
+                if not data:
+                    print("Disconnected from server")
+                    sys.exit()
+                else:
+                    sys.stdout.write(data)
+            else:
+                message = input()
+                message = bytes(message, 'utf-8')
+                sock.send(message)
 
 
 

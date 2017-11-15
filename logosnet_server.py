@@ -1,5 +1,5 @@
 #!/usr/bin/python           # This is server.py file
-"""This runs a client for the chatting application"""
+"""This runs a server for the chatting application"""
 import socket
 import argparse
 import select
