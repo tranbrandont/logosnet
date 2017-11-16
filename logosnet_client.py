@@ -3,35 +3,49 @@
 import socket
 import argparse
 import struct
+import sys
+import select
+from helper import recv
+from helper import send
 
-SOCK_LIST  = []
+
 
 def chat_client(port, ipnum):
+    username = input("Enter a username, max 10 chars: ")
     sock = socket.socket()
+
     if ipnum is None:
         ipnum = socket.gethostname()
     try:
         sock.connect((ipnum, port))
+        username = bytes(username, 'utf-8')
+        strsize = len(username)
+        username = struct.pack('!I%ds' % (strsize,), strsize, username)
+        send(sock, username)
     except:
         print("Unable to connect")
         sys.exit()
+    socket_list = [sys.stdin, sock]
+    outgoing = [sock]
     while 1:
-        socket_list = [sys.stdin, sock]
-
-        read, write, error = select.select(socket_list, [], [])
+        read, write, error = select.select(socket_list, outgoing, [])
 
         for sockpeer in read:
             if sockpeer == sock:
-                data = sock.recv(4096)
-                if not data:
+                psize, message = recv(sockpeer)
+                if not message:
                     print("Disconnected from server")
                     sys.exit()
                 else:
-                    sys.stdout.write(data)
+                    _messagesize, message = struct.unpack('!I%ds' % ((psize - 4),), message)
+                    message = message.decode('utf-8')
+                    sys.stdout.write(message)
             else:
-                message = input()
+                message = sockpeer.readline()
                 message = bytes(message, 'utf-8')
-                sock.send(message)
+                strsize = len(message)
+                message = struct.pack('!I%ds' % (strsize,), strsize, message)
+                send(sock, message)
 
 
 
