@@ -5,48 +5,70 @@ import argparse
 import struct
 import sys
 import select
+import signal
+import string
 from helper import recv
 from helper import send
 
+TIMEOUT = 60
+
+def interrupted(signum, frame):
+	print("Didn't enter username within 60 seconds")
+	signal.signal(signal.SIGALRM, interrupted)
+
+
+def get_user():
+	username = ' '
+	while ' ' in username or len(username) > 10:
+		signal.alarm(TIMEOUT)
+		print("Enter a username, max 10 chars: \r",)
+		i, o, e = select.select([sys.stdin], [], [])
+		if i:
+			username = sys.stdin.readline().strip()
+		signal.alarm(0)
+		if ' ' in username:
+			print("No spaces allowed in username")
+		elif len(username) > 10:
+			print("Username can't be more than 10 chars")
+	return username
+
 
 def chat_client(port, ipnum):
-	username = input("Enter a username, max 10 chars: ")
-	sock = socket.socket()
-
+	username = get_user()
 	if ipnum is None:
 		ipnum = socket.gethostname()
 	try:
-		sock.connect((ipnum, port))
-		username = bytes(username, 'utf-8')
-		strsize = len(username)
-		username = struct.pack('!I%ds' % (strsize,), strsize, username)
-		send(sock, username)
-	except:
-		print("Unable to connect")
+		nonunique = True
+		while nonunique:
+			sock = socket.socket()
+			sock.connect((ipnum, port))
+			send(sock, username)
+			response = recv(sock)
+			if response == "Unique":
+				nonunique = False
+			else:
+				sock.close()
+				print("Username is taken")
+				username = get_user()
+	except Exception as e:
+		print("Unable to connect" + str(e))
+
 		sys.exit()
 	socket_list = [sys.stdin, sock]
-	outgoing = [sock]
 	while 1:
-		read, write, error = select.select(socket_list, outgoing, [])
+		read, write, error = select.select(socket_list, [], [])
 
 		for sockpeer in read:
 			if sockpeer == sock:
-				psize, message = recv(sockpeer)
+				message = recv(sockpeer)
 				if not message:
 					print("Disconnected from server")
 					sys.exit()
 				else:
-					_messagesize, message = struct.unpack('!I%ds' % ((psize - 4),),
-																								message)
-					message = message.decode('utf-8')
 					sys.stdout.write(message)
 			else:
 				message = sockpeer.readline()
-				message = bytes(message, 'utf-8')
-				strsize = len(message)
-				message = struct.pack('!I%ds' % (strsize,), strsize, message)
 				send(sock, message)
-
 
 def main():
 	"""Parses command line arguments, starts client"""

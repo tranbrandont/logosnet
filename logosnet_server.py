@@ -5,11 +5,12 @@ import argparse
 import select
 import struct
 import os
+import time
 from helper import recv
 from helper import send
 
 SOCK_LIST = []
-
+USER_SOCK_LIST = []
 
 def chat_server(port, ipnum):
 	serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,25 +27,21 @@ def chat_server(port, ipnum):
 		for sock in read:
 			if sock == serv_sock:
 				con, _addr = serv_sock.accept()
-				con.setblocking(0)
 				SOCK_LIST.append(con)
-				psize, username = recv(con)
-				if username:
-					_messagesize, username = struct.unpack('!I%ds' % ((psize - 4),),
-																								 username)
-					username = username.decode('utf-8')
+				username = recv(con)
+				if any(username in user_list for user_list in USER_SOCK_LIST):
+					send(con, "Notunique")
+					print("client connected (%s, %s)" % _addr)
+					broadcast(serv_sock, con, "Anonymous entered our chat room\n")
+				else:
+					USER_SOCK_LIST.append((con, username))
+					send(con, "Unique")
 					print("client connected (%s)" % username)
 					broadcast(serv_sock, con, "[%s] entered our chat room\n" % username)
-				else:
-					print("client connected (%s, %s)" % _addr)
-					broadcast(serv_sock, con, "[%s:%s] entered our chat room\n" % _addr)
 			else:
 				try:
-					psize, message = recv(sock)
+					message = recv(sock)
 					if message:
-						_messagesize, message = struct.unpack('!I%ds' % ((psize - 4),),
-																									message)
-						message = message.decode('utf-8')
 						print(message)
 						broadcast(serv_sock, sock,
 											"\r" + '[' + str(sock.getpeername()) + '] ' + message)
@@ -56,15 +53,12 @@ def chat_server(port, ipnum):
 				except:
 					SOCK_LIST.remove(sock)
 					broadcast(serv_sock, sock,
-										"Client (%s, %s) is offline, try failed\n" % _addr)
+										"Client (%s, %s) is offline\n" % _addr)
 					sock.close()
 	serv_sock.close()
 
 
 def broadcast(serv_sock, sock, message):
-	message = bytes(message, 'utf-8')
-	strsize = len(message)
-	message = struct.pack('!I%ds' % (strsize,), strsize, message)
 	for sockpeer in SOCK_LIST:
 		if sockpeer != serv_sock and sockpeer != sock:
 			try:
