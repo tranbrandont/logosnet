@@ -12,6 +12,8 @@ from helper import send
 SOCK_LIST = []
 USER_SOCK_DICT = {}
 
+
+
 def chat_server(port, ipnum):
 	serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	serv_sock.setblocking(0)
@@ -67,8 +69,6 @@ def chat_server(port, ipnum):
 										"Client {} is offline\n".format(USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(sock) is not None else "Anonymous"))
 					USER_SOCK_DICT.pop(sock)
 					sock.close()
-	serv_sock.close()
-
 
 def broadcast(serv_sock, sock, message):
 	for sockpeer in SOCK_LIST:

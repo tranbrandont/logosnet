@@ -51,6 +51,7 @@ def chat_client(port, ipnum):
 			elif response == "Max # users in server reached":
 				print(response)
 				sock.close()
+				sys.exit()
 			else:
 				sock.close()
 				print("Username is taken")
