@@ -7,6 +7,7 @@ from helper import recv
 from helper import send
 
 SOCK_LIST = []
+WRITE_LIST = []
 USER_SOCK_DICT = {}
 
 
@@ -14,6 +15,7 @@ def accept_client(serv_sock):
     """Accepts clients into the server or rejects if names aren't unique or
     max number of users in server"""
     con, _addr = serv_sock.accept()
+    send(con, "You are connected")
     if len(SOCK_LIST) >= 100:
         send(con, "Max # users in server reached")
         con.close()
@@ -31,6 +33,7 @@ def accept_client(serv_sock):
             print("User {} connected".format(username))
             broadcast(serv_sock, con,
                       "{} entered our chat room\n".format(username))
+            WRITE_LIST.append(con)
 
 
 def message_handle(message, sock, serv_sock):
@@ -49,6 +52,7 @@ def message_handle(message, sock, serv_sock):
     else:
         if sock in SOCK_LIST:
             SOCK_LIST.remove(sock)
+            WRITE_LIST.remove(sock)
             broadcast(serv_sock, sock, "Client {} is offline\n".format(
                 USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(
                     sock) is not None else"Anonymous"))
@@ -68,7 +72,7 @@ def chat_server(port, ipnum):
     SOCK_LIST.append(serv_sock)
 
     while 1:
-        read, _write, _error = select.select(SOCK_LIST, [], [])
+        read, write, _error = select.select(SOCK_LIST, WRITE_LIST, [])
         for sock in read:
             if sock == serv_sock:
                 accept_client(serv_sock)
@@ -78,6 +82,7 @@ def chat_server(port, ipnum):
                     message_handle(message, sock, serv_sock)
                 except:
                     SOCK_LIST.remove(sock)
+                    WRITE_LIST.remove(sock)
                     broadcast(serv_sock, sock,
                               "Client {} is offline\n".format(
                                   USER_SOCK_DICT.get(
@@ -87,9 +92,9 @@ def chat_server(port, ipnum):
                     sock.close()
 
 
-def broadcast(serv_sock, sock, message):
+def broadcast(serv_sock, sock, message, write):
     """sends messages to all clients except sending client"""
-    for sockpeer in SOCK_LIST:
+    for sockpeer in write:
         if sockpeer != serv_sock and sockpeer != sock:
             try:
                 send(sockpeer, message)
@@ -97,6 +102,7 @@ def broadcast(serv_sock, sock, message):
                 sockpeer.close()
                 if sockpeer in SOCK_LIST:
                     SOCK_LIST.remove(sockpeer)
+                    WRITE_LIST.remove(sock)
                     USER_SOCK_DICT.pop(sock)
 
 

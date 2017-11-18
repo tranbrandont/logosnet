@@ -38,35 +38,35 @@ def get_user():
 
 def chat_client(port, ipnum):
     """Runs chat client"""
-    username = get_user()
     if ipnum is None:
         ipnum = socket.gethostname()
+    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.sock.connect((ipnum, port))
+    print(recv(self.sock))
+    username = get_user()
     try:
         nonunique = True
         while nonunique:
-            sock = socket.socket()
-            sock.connect((ipnum, port))
-            send(sock, username)
-            response = recv(sock)
+            send(self.sock, username)
+            response = recv(self.sock)
             if response == "Unique":
                 nonunique = False
             elif response == "Max # users in server reached":
                 print(response)
-                sock.close()
-                sys.exit()
+                self.sock.close()
             else:
-                sock.close()
+                self.sock.close()
                 print("Username is taken")
                 username = get_user()
     except Exception as err:
         print("Unable to connect" + str(err))
         sys.exit()
-    socket_list = [sys.stdin, sock]
+    socket_list = [sys.stdin, self.sock]
     while 1:
         read, _write, _error = select.select(socket_list, [], [])
         for sockpeer in read:
             print(username + ": ", )
-            if sockpeer == sock:
+            if sockpeer == self.sock:
                 message = recv(sockpeer)
                 if not message:
                     print("Disconnected from server")
@@ -76,16 +76,16 @@ def chat_client(port, ipnum):
             else:
                 message = sockpeer.readline()
                 print(message)
-                send_msg(sock, message)
+                send_msg(self.sock, message)
 
 
-def send_msg(sock, message):
+def send_msg(self.sock, message):
     """Handles sending the message and checking for exit and msg len"""
     if message.strip() == "exit()":
-        sock.close()
+        self.sock.close()
         sys.exit()
     if len(message) < MAX_MSG:
-        send(sock, message)
+        self.send(sock, message)
     else:
         print("Message too big")
 
