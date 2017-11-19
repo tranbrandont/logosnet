@@ -14,13 +14,49 @@ MAX_MSG = 1000
 
 
 class Client:
-    def __init__(self, port, ipnum):
+    """Creates clients for chat service"""
+    def interrupted(self, _signum, _frame):
+        """Signal handler for alarm"""
+        print("Didn't enter username within 60 seconds")
+        sys.exit()
+
+
+    @staticmethod
+    def get_user():
+        """Gets username, doesn't allow names over 10 chars
+        or with white space"""
+        username = ' '
+        while ' ' in username or len(username) > MAX_USERNM:
+            signal.signal(signal.SIGALRM, self.interrupted)
+            signal.alarm(TIMEOUT)
+            print("Enter a username, max 10 chars: \r", )
+            i, _o, _e = select.select([sys.stdin], [], [])
+            if i:
+                username = sys.stdin.readline().strip()
+            signal.alarm(0)
+            if ' ' in username:
+                print("No spaces allowed in username")
+            elif len(username) > 10:
+                print("Username can't be more than 10 chars")
+        return username
+
+    def send_msg(self, sock, message):
+        """Handles sending the message and checking for exit and msg len"""
+        if message.strip() == "exit()":
+            self.sock.close()
+            sys.exit()
+        if len(message) < MAX_MSG:
+            send(sock, message)
+        else:
+            print("Message too big")
+
+    def __init__(self, portnum, ip):
         """Runs chat client"""
-        username = get_user()
-        if ipnum is None:
-            ipnum = socket.gethostname()
+        username = self.get_user()
+        if ip is None:
+            ip = socket.gethostname()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((ipnum, port))
+        self.sock.connect((ip, portnum))
         print(recv(self.sock))
         try:
             nonunique = True
@@ -35,7 +71,7 @@ class Client:
                 else:
                     self.sock.close()
                     print("Username is taken")
-                    username = get_user()
+                    username = self.get_user()
         except Exception as err:
             print("Unable to connect" + str(err))
             sys.exit()
@@ -54,48 +90,14 @@ class Client:
                 else:
                     message = sockpeer.readline()
                     print(message)
-                    send_msg(self.sock, message)
+                    self.send_msg(self.sock, message)
 
-    def interrupted(self, _signum, _frame):
-        """Signal handler for alarm"""
-        print("Didn't enter username within 60 seconds")
-        signal.signal(signal.SIGALRM, interrupted)
-
-    def get_user(self):
-        """Gets username, doesn't allow names over 10 chars
-        or with white space"""
-        username = ' '
-        while ' ' in username or len(username) > MAX_USERNM:
-            signal.alarm(TIMEOUT)
-            print("Enter a username, max 10 chars: \r", )
-            i, _o, _e = select.select([sys.stdin], [], [])
-            if i:
-                username = sys.stdin.readline().strip()
-            signal.alarm(0)
-            if ' ' in username:
-                print("No spaces allowed in username")
-            elif len(username) > 10:
-                print("Username can't be more than 10 chars")
-        return username
-
-    def send_msg(sock, message):
-        """Handles sending the message and checking for exit and msg len"""
-        if message.strip() == "exit()":
-            self.sock.close()
-            sys.exit()
-        if len(message) < MAX_MSG:
-            self.send(sock, message)
-        else:
-            print("Message too big")
 
 if __name__ == "__main__":
-    """Parses command line arguments, starts client"""
-    parser = argparse.ArgumentParser(add_help=True)
-    parser.add_argument('--port', type=int, required=True, help='port number')
-    parser.add_argument('--ip', help='IP address for client')
-    args = parser.parse_args()
-    port = args.port
-    ipnum = args.ip
-    clientchat = Client(port, ipnum)
-
-
+    PARSER = argparse.ArgumentParser(add_help=True)
+    PARSER.add_argument('--port', type=int, required=True, help='port number')
+    PARSER.add_argument('--ip', help='IP address for client')
+    ARGS = PARSER.parse_args()
+    PORT = ARGS.port
+    IPNUM = ARGS.ip
+    CLIENTCHAT = Client(PORT, IPNUM)
