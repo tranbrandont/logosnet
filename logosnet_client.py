@@ -36,14 +36,14 @@ def get_user():
     return username
 
 
-def chat_client(port, ipnum):
+def chat_client(self, port, ipnum):
     """Runs chat client"""
+    username = get_user()
     if ipnum is None:
         ipnum = socket.gethostname()
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.sock.connect((ipnum, port))
     print(recv(self.sock))
-    username = get_user()
     try:
         nonunique = True
         while nonunique:
