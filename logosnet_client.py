@@ -13,21 +13,21 @@ MAX_USERNM = 10
 MAX_MSG = 1000
 
 
+def interrupted(_signum, _frame):
+    """Signal handler for alarm"""
+    print("Didn't enter username within 60 seconds")
+    sys.exit()
+
+
 class Client:
     """Creates clients for chat service"""
-    def interrupted(self, _signum, _frame):
-        """Signal handler for alarm"""
-        print("Didn't enter username within 60 seconds")
-        sys.exit()
-
-
     @staticmethod
     def get_user():
         """Gets username, doesn't allow names over 10 chars
         or with white space"""
         username = ' '
         while ' ' in username or len(username) > MAX_USERNM:
-            signal.signal(signal.SIGALRM, self.interrupted)
+            signal.signal(signal.SIGALRM, interrupted)
             signal.alarm(TIMEOUT)
             print("Enter a username, max 10 chars: \r", )
             i, _o, _e = select.select([sys.stdin], [], [])
