@@ -79,7 +79,7 @@ def chat_client(port, ipnum):
                 send_msg(self.sock, message)
 
 
-def send_msg(self.sock, message):
+def send_msg(sock, message):
     """Handles sending the message and checking for exit and msg len"""
     if message.strip() == "exit()":
         self.sock.close()
