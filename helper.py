@@ -24,6 +24,7 @@ def send(connection, message):
     strsize = len(message)
     message = struct.pack('!%ds' % strsize, message)
     psize = len(message)
+    print(str(len(message)) + "hello")
     psize = struct.pack('!i', psize)
     connection.send(psize)
     connection.send(message)

@@ -21,6 +21,7 @@ def accept_client(serv_sock, write):
         con.close()
     else:
         SOCK_LIST.append(con)
+        WRITE_LIST.append(con)
         username = recv(con)
         if any(username in user for user in
                USER_SOCK_DICT.values()):
@@ -33,30 +34,33 @@ def accept_client(serv_sock, write):
             print("User {} connected".format(username))
             broadcast(serv_sock, con, write,
                       "{} entered our chat room\n".format(username))
-            WRITE_LIST.append(con)
 
 
 def message_handle(message, sock, serv_sock, write):
     """Handles incoming messages and redirects them to clients"""
     if message:
         if message[:1] == '@':
-            privatemessage = message.split(' ', 1)[0]
-            friend = privatemessage[1:len(privatemessage)]
+            privatemessage = message.split(' ', 1)
+            friend = privatemessage[0][1:len(privatemessage[0])]
             print(friend)
             for user, name in USER_SOCK_DICT.items():
                 if friend == name:
-                    send(user, "> " + message)
+                    send(user, "> " + USER_SOCK_DICT.get(sock) + privatemessage[1])
+                    break
+            broadcast(serv_sock, sock, write,
+                      "> " + USER_SOCK_DICT.get(sock) + ': ' + message)
         else:
             broadcast(serv_sock, sock, write,
                       "> " + USER_SOCK_DICT.get(sock) + ': ' + message)
     else:
         if sock in SOCK_LIST:
+            print(USER_SOCK_DICT)
             SOCK_LIST.remove(sock)
             WRITE_LIST.remove(sock)
             broadcast(serv_sock, sock, write, "Client {} is offline\n".format(
                 USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(
                     sock) is not None else"Anonymous"))
-            USER_SOCK_DICT.pop(sock)
+            del USER_SOCK_DICT[sock]
         sock.close()
 
 
@@ -77,19 +81,8 @@ def chat_server(port, ipnum):
             if sock == serv_sock:
                 accept_client(serv_sock, write)
             else:
-                try:
-                    message = recv(sock)
-                    message_handle(message, sock, serv_sock, write)
-                except:
-                    SOCK_LIST.remove(sock)
-                    WRITE_LIST.remove(sock)
-                    broadcast(serv_sock, sock, write,
-                              "Client {} is offline\n".format(
-                                  USER_SOCK_DICT.get(
-                                      sock) if USER_SOCK_DICT.get(
-                                          sock) is not None else "Anonymous"))
-                    USER_SOCK_DICT.pop(sock)
-                    sock.close()
+                message = recv(sock)
+                message_handle(message, sock, serv_sock, write)
 
 
 def broadcast(serv_sock, sock, write, message):
@@ -102,8 +95,8 @@ def broadcast(serv_sock, sock, write, message):
                 sockpeer.close()
                 if sockpeer in SOCK_LIST:
                     SOCK_LIST.remove(sockpeer)
-                    WRITE_LIST.remove(sock)
-                    USER_SOCK_DICT.pop(sock)
+                    WRITE_LIST.remove(sockpeer)
+                    USER_SOCK_DICT.pop(sockpeer)
 
 
 def main():

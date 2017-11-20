@@ -5,6 +5,7 @@ import argparse
 import sys
 import select
 import signal
+import struct
 from helper import recv
 from helper import send
 
@@ -52,6 +53,8 @@ class Client:
 
     def __init__(self, portnum, ip):
         """Runs chat client"""
+        msgsize = 0
+        data = bytearray()
         username = self.get_user()
         if ip is None:
             ip = socket.gethostname()
@@ -76,22 +79,37 @@ class Client:
             print("Unable to connect" + str(err))
             sys.exit()
         socket_list = [sys.stdin, self.sock]
-        sys.stdout.write(">" + username + ": ");
-        sys.stdout.flush()
         while 1:
             read, _write, _error = select.select(socket_list, [], [])
             for sockpeer in read:
-                print(username + ": ", )
                 if sockpeer == self.sock:
-                    message = recv(sockpeer)
-                    if not message:
-                        print("Disconnected from server")
-                        sys.exit()
-                    else:
+                    if msgsize == 0:
+                        if len(data) < 4:
+                            more = sockpeer.recv(2)
+                        if not more:
+                            print("Disconnected from server")
+                            sys.exit()
+                        data.extend(more)
+                        if len(data) == 4:
+                            msgsize = struct.unpack('!i', data)[0]
+                            data = bytearray()
+                    elif len(data) < msgsize:
+                        more = sockpeer.recv(2)
+                        if not more:
+                            print("Disconnected from server")
+                            sys.exit()
+                        data += more
+                    if len(data) == msgsize:
+                        print("hi")
+                        message = struct.unpack('!%ds' % msgsize, data)
+                        message = message[0].decode('utf-8')
                         sys.stdout.write(message)
+                        msgsize = 0
+                        data = bytearray()
                 else:
+                    sys.stdout.write(username + ": ")
+                    sys.stdout.flush()
                     message = sockpeer.readline()
-                    print(message)
                     self.send_msg(self.sock, message)
 
 
