@@ -8,6 +8,7 @@ import signal
 import struct
 from helper import recv
 from helper import send
+from helper import looprecv
 
 TIMEOUT = 60
 MAX_USERNM = 10
@@ -75,6 +76,8 @@ class Client:
                     self.sock.close()
                     print("Username is taken")
                     username = self.get_user()
+                    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.sock.connect((ip, portnum))
         except Exception as err:
             print("Unable to connect" + str(err))
             sys.exit()
@@ -82,31 +85,17 @@ class Client:
         while 1:
             read, _write, _error = select.select(socket_list, [], [])
             for sockpeer in read:
+                print("new cleint")
                 if sockpeer == self.sock:
-                    if msgsize == 0:
-                        if len(data) < 4:
-                            more = sockpeer.recv(2)
-                        if not more:
-                            print("Disconnected from server")
-                            sys.exit()
-                        data.extend(more)
-                        if len(data) == 4:
-                            msgsize = struct.unpack('!i', data)[0]
-                            data = bytearray()
-                    elif len(data) < msgsize:
-                        more = sockpeer.recv(2)
-                        if not more:
-                            print("Disconnected from server")
-                            sys.exit()
-                        data += more
+                    msgsize, data = looprecv(sockpeer, msgsize, data)
                     if len(data) == msgsize:
-                        print("hi")
                         message = struct.unpack('!%ds' % msgsize, data)
                         message = message[0].decode('utf-8')
                         sys.stdout.write(message)
                         msgsize = 0
                         data = bytearray()
                 else:
+                    print("new send")
                     sys.stdout.write(username + ": ")
                     sys.stdout.flush()
                     message = sockpeer.readline()

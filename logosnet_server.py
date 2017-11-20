@@ -1,10 +1,16 @@
 #!/usr/bin/python           # This is server.py file
+
+
+"""IF USERNAME ISN'T IN LIST ASK FOR USERNAME"""
 """This runs a server for the chatting application"""
 import socket
 import argparse
 import select
+import sys
+import struct
 from helper import recv
 from helper import send
+from helper import looprecv
 
 SOCK_LIST = []
 WRITE_LIST = []
@@ -20,20 +26,21 @@ def accept_client(serv_sock, write):
         send(con, "Max # users in server reached")
         con.close()
     else:
-        SOCK_LIST.append(con)
-        WRITE_LIST.append(con)
         username = recv(con)
         if any(username in user for user in
                USER_SOCK_DICT.values()):
             send(con, "Notunique")
             print("client connected Anonymous")
             broadcast(serv_sock, con, write, "Anonymous entered our chat room\n")
+            con.close()
         else:
             USER_SOCK_DICT[con] = username
             send(con, "Unique")
             print("User {} connected".format(username))
             broadcast(serv_sock, con, write,
                       "{} entered our chat room\n".format(username))
+            SOCK_LIST.append(con)
+            WRITE_LIST.append(con)
 
 
 def message_handle(message, sock, serv_sock, write):
@@ -54,7 +61,6 @@ def message_handle(message, sock, serv_sock, write):
                       "> " + USER_SOCK_DICT.get(sock) + ': ' + message)
     else:
         if sock in SOCK_LIST:
-            print(USER_SOCK_DICT)
             SOCK_LIST.remove(sock)
             WRITE_LIST.remove(sock)
             broadcast(serv_sock, sock, write, "Client {} is offline\n".format(
@@ -66,23 +72,33 @@ def message_handle(message, sock, serv_sock, write):
 
 def chat_server(port, ipnum):
     """Starts chat server"""
+    msgsize = 0
+    data = bytearray()
     serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serv_sock.setblocking(0)
     print("Server started")
     if ipnum is None:
         ipnum = socket.gethostname()
     serv_sock.bind((ipnum, port))
-    serv_sock.listen(100)
+    serv_sock.listen(1000)
     SOCK_LIST.append(serv_sock)
 
     while 1:
         read, write, _error = select.select(SOCK_LIST, WRITE_LIST, [])
         for sock in read:
             if sock == serv_sock:
+                print("new client")
                 accept_client(serv_sock, write)
             else:
-                message = recv(sock)
-                message_handle(message, sock, serv_sock, write)
+                print("new message")
+                msgsize, data = looprecv(sock, msgsize, data)
+                if len(data) == msgsize:
+                    message = struct.unpack('!%ds' % msgsize, data)
+                    message = message[0].decode('utf-8')
+                    sys.stdout.write(message)
+                    msgsize = 0
+                    data = bytearray()
+                    message_handle(message, sock, serv_sock, write)
 
 
 def broadcast(serv_sock, sock, write, message):

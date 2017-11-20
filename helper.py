@@ -1,6 +1,7 @@
 #!/usr/bin/python           # This does sending and receiving
 """Helps with receiving and sending to client and server"""
 import struct
+import sys
 
 
 def recv(connection):
@@ -24,7 +25,24 @@ def send(connection, message):
     strsize = len(message)
     message = struct.pack('!%ds' % strsize, message)
     psize = len(message)
-    print(str(len(message)) + "hello")
     psize = struct.pack('!i', psize)
     connection.send(psize)
     connection.send(message)
+
+
+def looprecv(sockpeer, msgsize, data):
+    if msgsize == 0:
+        if len(data) < 4:
+            more = sockpeer.recv(2)
+            data.extend(more)
+        if not more:
+            sys.exit()
+        if len(data) == 4:
+            msgsize = struct.unpack('!i', data)[0]
+            data = bytearray()
+        return msgsize, data
+    elif len(data) < msgsize:
+        more = sockpeer.recv(2)
+        data.extend(more)
+        return msgsize, data
+
