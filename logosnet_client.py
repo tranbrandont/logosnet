@@ -76,10 +76,13 @@ class Client:
             print("Unable to connect" + str(err))
             sys.exit()
         socket_list = [sys.stdin, self.sock]
+        sys.stdout.write(">" + username + ": ");
+        sys.stdout.flush()
         while 1:
             read, _write, _error = select.select(socket_list, [], [])
             for sockpeer in read:
-                print(username + ": ", )
+                sys.stdout.write(">" + username + ": ");
+                sys.stdout.flush()
                 if sockpeer == self.sock:
                     message = recv(sockpeer)
                     if not message:
