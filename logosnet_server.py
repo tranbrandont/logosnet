@@ -11,23 +11,7 @@ WRITE_LIST = []
 USER_SOCK_DICT = {}
 
 
-def client_username(username, con, serv_sock, write):
-    """Takes client username"""
-    if any(username in user for user in
-           USER_SOCK_DICT.values()):
-        send(con, "Notunique")
-        print("client connected Anonymous")
-        broadcast(serv_sock, con, write, "Anonymous entered our chat room\n")
-    else:
-        USER_SOCK_DICT[con] = username
-        send(con, "Unique")
-        print("User {} connected".format(username))
-        broadcast(serv_sock, con, write,
-                  "{} entered our chat room\n".format(username))
-        WRITE_LIST.append(con)
-
-
-def accept_client(serv_sock):
+def accept_client(serv_sock, write):
     """Accepts clients into the server or rejects if names aren't unique or
     max number of users in server"""
     con, _addr = serv_sock.accept()
@@ -37,8 +21,19 @@ def accept_client(serv_sock):
         con.close()
     else:
         SOCK_LIST.append(con)
-        WRITE_LIST.append(con)
-        USER_SOCK_DICT[con] = ""
+        username = recv(con)
+        if any(username in user for user in
+               USER_SOCK_DICT.values()):
+            send(con, "Notunique")
+            print("client connected Anonymous")
+            broadcast(serv_sock, con, write, "Anonymous entered our chat room\n")
+        else:
+            USER_SOCK_DICT[con] = username
+            send(con, "Unique")
+            print("User {} connected".format(username))
+            broadcast(serv_sock, con, write,
+                      "{} entered our chat room\n".format(username))
+            WRITE_LIST.append(con)
 
 
 def message_handle(message, sock, serv_sock, write):
@@ -80,14 +75,11 @@ def chat_server(port, ipnum):
         read, write, _error = select.select(SOCK_LIST, WRITE_LIST, [])
         for sock in read:
             if sock == serv_sock:
-                accept_client(serv_sock)
+                accept_client(serv_sock, write)
             else:
                 try:
                     message = recv(sock)
-                    if USER_SOCK_DICT[sock] is None:
-                        client_username(message, sock, serv_sock, write)
-                    else:
-                        message_handle(message, sock, serv_sock, write)
+                    message_handle(message, sock, serv_sock, write)
                 except:
                     SOCK_LIST.remove(sock)
                     WRITE_LIST.remove(sock)
