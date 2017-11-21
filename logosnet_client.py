@@ -56,15 +56,14 @@ class Client:
         """Runs chat client"""
         msgsize = 0
         data = bytearray()
-        username = self.get_user()
         if ip is None:
             ip = socket.gethostname()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((ip, portnum))
-        print(recv(self.sock))
         try:
             nonunique = True
             while nonunique:
+                username = self.get_user()
                 send(self.sock, username)
                 response = recv(self.sock)
                 if response == "Unique":
@@ -75,9 +74,6 @@ class Client:
                 else:
                     self.sock.close()
                     print("Username is taken")
-                    username = self.get_user()
-                    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    self.sock.connect((ip, portnum))
         except Exception as err:
             print("Unable to connect" + str(err))
             sys.exit()
@@ -85,7 +81,6 @@ class Client:
         while 1:
             read, _write, _error = select.select(socket_list, [], [])
             for sockpeer in read:
-                print("new cleint")
                 if sockpeer == self.sock:
                     msgsize, data = looprecv(sockpeer, msgsize, data)
                     if len(data) == msgsize:
@@ -95,7 +90,6 @@ class Client:
                         msgsize = 0
                         data = bytearray()
                 else:
-                    print("new send")
                     sys.stdout.write(username + ": ")
                     sys.stdout.flush()
                     message = sockpeer.readline()
