@@ -24,18 +24,19 @@ def interrupted(_signum, _frame):
 class Client:
     """Creates clients for chat service"""
     @staticmethod
-    def get_user():
+    def get_user(sock):
         """Gets username, doesn't allow names over 10 chars
         or with white space"""
         username = ' '
         while ' ' in username or len(username) > MAX_USERNM:
-            signal.signal(signal.SIGALRM, interrupted)
-            signal.alarm(TIMEOUT)
             print("Enter a username, max 10 chars: \r", )
-            i, _o, _e = select.select([sys.stdin], [], [])
+            i, _o, _e = select.select([sys.stdin], [], [], TIMEOUT)
             if i:
-                username = sys.stdin.readline().strip()
-            signal.alarm(0)
+                username = sys.stdin.readline().rstrip('\n')
+            else:
+                print("Did not enter username")
+                sock.close()
+                sys.exit()
             if ' ' in username:
                 print("No spaces allowed in username")
             elif len(username) > 10:
@@ -63,16 +64,14 @@ class Client:
         try:
             nonunique = True
             while nonunique:
-                username = self.get_user()
+                username = self.get_user(self.sock)
                 send(self.sock, username)
                 response = recv(self.sock)
                 if response == "Unique":
                     nonunique = False
                 elif response == "Max # users in server reached":
                     print(response)
-                    self.sock.close()
                 else:
-                    self.sock.close()
                     print("Username is taken")
         except Exception as err:
             print("Unable to connect" + str(err))
@@ -87,6 +86,7 @@ class Client:
                         message = struct.unpack('!%ds' % msgsize, data)
                         message = message[0].decode('utf-8')
                         sys.stdout.write(message)
+                        sys.stdout.flush()
                         msgsize = 0
                         data = bytearray()
                 else:

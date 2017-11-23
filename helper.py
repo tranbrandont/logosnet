@@ -31,12 +31,15 @@ def send(connection, message):
 
 
 def looprecv(sockpeer, msgsize, data):
+    print(msgsize)
+    print(len(data))
     if msgsize == 0:
         if len(data) < 4:
             more = sockpeer.recv(2)
             data.extend(more)
         if not more:
-            sys.exit()
+            print("Closing client")
+            sockpeer.close()
         if len(data) == 4:
             msgsize = struct.unpack('!i', data)[0]
             data = bytearray()
