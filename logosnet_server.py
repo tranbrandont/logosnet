@@ -35,7 +35,7 @@ def take_username(con, serv_sock, write, username):
         if con in SOCK_LIST:
             SOCK_LIST.remove(con)
         con.close()
-    elif any(username in user for user in
+    elif any(username == user for user in
            USER_SOCK_DICT.values()):
         send(con, "Notunique")
         print("client connected Anonymous")
@@ -54,12 +54,16 @@ def message_handle(message, sock, serv_sock, write):
     """Handles incoming messages and redirects them to clients"""
     if message:
         if message[:1] == '@':
+            notfound = 1
             privatemessage = message.split(' ', 1)
             print(privatemessage[0])
             friend = privatemessage[0][1:len(privatemessage[0])]
             for user, name in USER_SOCK_DICT.items():
                 if friend == name:
                     send(user, "> " + USER_SOCK_DICT.get(sock) + ": " + message)
+                    notfound = 0
+            if notfound:
+                send(sock, "User " + friend + " not connected")
         else:
             broadcast(serv_sock, sock, write,
                       "> " + USER_SOCK_DICT.get(sock) + ': ' + message)

@@ -31,8 +31,6 @@ def send(connection, message):
 
 
 def looprecv(sockpeer, msgsize, data):
-    print(msgsize)
-    print(len(data))
     if msgsize == 0:
         if len(data) < 4:
             more = sockpeer.recv(2)
