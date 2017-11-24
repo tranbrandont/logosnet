@@ -27,6 +27,8 @@ def accept_client(serv_sock):
     if len(SOCK_LIST) >= 100:
         send(con, "Max # users in server reached")
         con.close()
+    else:
+        send(con, "You are connected")
 
 
 def take_username(con, serv_sock, write, username):
@@ -84,6 +86,7 @@ def chat_server(port, ipnum):
     msgsize = 0
     data = bytearray()
     serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     serv_sock.setblocking(0)
     print("Server started")
     if ipnum is None:
