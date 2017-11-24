@@ -29,7 +29,7 @@ class Client:
         or with white space"""
         username = ' '
         while ' ' in username or len(username) > MAX_USERNM:
-            print("Enter a username, max 10 chars: \r", )
+            print("Enter username, max 10 chars: \r", )
             i, _o, _e = select.select([sys.stdin], [], [], TIMEOUT)
             if i:
                 username = sys.stdin.readline().rstrip('\n')

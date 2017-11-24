@@ -41,14 +41,13 @@ def take_username(con, serv_sock, write, username):
            USER_SOCK_DICT.values()):
         send(con, "Notunique")
         print("client connected Anonymous")
-        broadcast(serv_sock, con, write, "Anonymous entered our chat room\n")
         USER_SOCK_DICT[con] = ' '
     else:
         USER_SOCK_DICT[con] = username
         send(con, "Unique")
         print("User {} connected".format(username))
         broadcast(serv_sock, con, write,
-                  "{} entered our chat room\n".format(username))
+                  "User {} has joined\n".format(username))
         WRITE_LIST.append(con)
 
 
@@ -58,14 +57,13 @@ def message_handle(message, sock, serv_sock, write):
         if message[:1] == '@':
             notfound = 1
             privatemessage = message.split(' ', 1)
-            print(privatemessage[0])
             friend = privatemessage[0][1:len(privatemessage[0])]
             for user, name in USER_SOCK_DICT.items():
                 if friend == name:
                     send(user, "> " + USER_SOCK_DICT.get(sock) + ": " + message)
                     notfound = 0
             if notfound:
-                send(sock, "User " + friend + " not connected")
+                send(sock, "User " + friend + " not connected\n")
         else:
             broadcast(serv_sock, sock, write,
                       "> " + USER_SOCK_DICT.get(sock) + ': ' + message)
@@ -74,7 +72,7 @@ def message_handle(message, sock, serv_sock, write):
             SOCK_LIST.remove(sock)
             if sock in WRITE_LIST:
                 WRITE_LIST.remove(sock)
-            broadcast(serv_sock, sock, write, "Client {} is offline\n".format(
+            broadcast(serv_sock, sock, write, "User {} has left\n".format(
                 USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(
                     sock) is not None else"Anonymous"))
             del USER_SOCK_DICT[sock]
