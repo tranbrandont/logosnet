@@ -31,8 +31,7 @@ def send(connection, message):
 
 def looprecv(sockpeer, msgsize, data):
     """accepts packets 2 bytes at a time"""
-    print(msgsize)
-    print(len(data))
+    print("message size is {}".format(msgsize))
     if msgsize == 0:
         if len(data) < 4:
             more = sockpeer.recv(2)
@@ -40,7 +39,9 @@ def looprecv(sockpeer, msgsize, data):
         if not more:
             print("Closing client")
             sockpeer.close()
-        if len(data) == 4:
+        if len(data) >= 4:
+            print("data len is {}".format(len(data)))
+            print("data is ()=={}".format(data))
             msgsize = struct.unpack('!i', data)[0]
             data = bytearray()
         return msgsize, data
