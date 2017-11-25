@@ -17,15 +17,17 @@ USER_SOCK_DICT = {}
 def accept_client(serv_sock):
     """Accepts clients into the server or rejects if names aren't unique or
     max number of users in server"""
-    con, _addr = serv_sock.accept()
-    con.setblocking(0)
-    SOCK_LIST.append(con)
-
-    if len(SOCK_LIST) >= 100:
-        send(con, "Max # users in server reached")
-        con.close()
-    else:
-        send(con, "You are connected")
+    try:
+        con, _addr = serv_sock.accept()
+        con.setblocking(0)
+        SOCK_LIST.append(con)
+        if len(SOCK_LIST) >= 101:
+            send(con, "Max # users in server reached")
+            con.close()
+        else:
+            send(con, "You are connected")
+    except:
+        Print("Can't accept?")
 
 
 def take_username(con, serv_sock, write, username):
@@ -85,15 +87,16 @@ def chat_server(port, ipnum):
     if ipnum is None:
         ipnum = socket.gethostname()
     serv_sock.bind((ipnum, port))
-    serv_sock.listen(1000)
+    serv_sock.listen(100)
     SOCK_LIST.append(serv_sock)
 
     while 1:
-        read, write, _error = select.select(SOCK_LIST, [], [])
+        read, write, error = select.select(SOCK_LIST, [], SOCK_LIST)
         for sock in read:
             if sock == serv_sock:
                 accept_client(serv_sock)
             else:
+                print(USER_SOCK_DICT.get(sock))
                 msgsize, data = looprecv(sock, msgsize, data)
                 if len(data) == msgsize:
                     message = struct.unpack('!%ds' % msgsize, data)
@@ -106,6 +109,13 @@ def chat_server(port, ipnum):
                     else:
                         write = WRITE_LIST
                         message_handle(message, sock, serv_sock, write)
+        for sock in error:
+            print("Handling exception for {}".format(USER_SOCK_DICT.get(sock)))
+            SOCK_LIST.remove(sock)
+            if sock in WRITE_LIST:
+                WRITE_LIST.remove(sock)
+            USER_SOCK_DICT.pop(sock)
+            sock.close()
 
 
 def broadcast(serv_sock, sock, write, message):
