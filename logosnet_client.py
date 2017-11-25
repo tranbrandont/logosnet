@@ -105,6 +105,9 @@ class Client:
             for sockpeer in read:
                 if sockpeer == self.sock:
                     msgsize, data = looprecv(sockpeer, msgsize, data)
+                    print("data len is {}".format(len(data)))
+                    print("data is ()=={}".format(data))
+                    print("message size is {}".format(msgsize))
                     if len(data) == msgsize:
                         message = struct.unpack('!%ds' % msgsize, data)
                         message = message[0].decode('utf-8')
