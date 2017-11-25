@@ -100,7 +100,7 @@ def chat_server(port, ipnum):
                     msgsize, data = looprecv(sock, msgsize, data)
                 except TypeError as e:
                     continue
-                if len(data) >= msgsize:
+                if len(data) == msgsize:
                     message = struct.unpack('!%ds' % msgsize, data)
                     message = message[0].decode('utf-8')
                     msgsize = 0
