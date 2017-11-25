@@ -96,12 +96,11 @@ def chat_server(port, ipnum):
                 accept_client(serv_sock)
                 print("There are {} clients".format(len(SOCK_LIST)))
             else:
-                print(data)
                 try:
                     msgsize, data = looprecv(sock, msgsize, data)
                 except TypeError as e:
                     continue
-                if len(data) == msgsize:
+                if len(data) >= msgsize:
                     message = struct.unpack('!%ds' % msgsize, data)
                     message = message[0].decode('utf-8')
                     msgsize = 0
