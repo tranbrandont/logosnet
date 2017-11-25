@@ -4,7 +4,6 @@ import socket
 import argparse
 import sys
 import select
-import signal
 import struct
 from helper import recv
 from helper import send
@@ -74,7 +73,7 @@ class Client:
                 elif response == "Max # users in server reached":
                     print(response)
                 else:
-                    print("Username is taken")
+                    print("Username is already in use")
         except Exception as err:
             print("Unable to connect" + str(err))
             sys.exit()
@@ -91,8 +90,8 @@ class Client:
                         message = message[0].decode('utf-8')
                         sys.stdout.write("\r" + message)
                         sys.stdout.flush()
-                        sys.stdout.write("> " + username + ": ")
-                        sys.stdout.flush()
+                        #sys.stdout.write("> " + username + ": ")
+                        #sys.stdout.flush()
                         msgsize = 0
                         data = bytearray()
                 else:

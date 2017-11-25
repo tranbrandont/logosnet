@@ -5,9 +5,7 @@
 import socket
 import argparse
 import select
-import sys
 import struct
-from helper import recv
 from helper import send
 from helper import looprecv
 
@@ -71,7 +69,7 @@ def message_handle(message, sock, serv_sock, write):
                 WRITE_LIST.remove(sock)
             broadcast(serv_sock, sock, write, "User {} has left\n".format(
                 USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(
-                    sock) is not None else"Anonymous"))
+                    sock) is not None else "Anonymous"))
             del USER_SOCK_DICT[sock]
         sock.close()
 
