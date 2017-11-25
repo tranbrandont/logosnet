@@ -1,7 +1,6 @@
 #!/usr/bin/python           # This is server.py file
 
 
-"""IF USERNAME ISN'T IN LIST ASK FOR USERNAME"""
 """This runs a server for the chatting application"""
 import socket
 import argparse
