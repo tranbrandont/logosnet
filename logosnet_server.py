@@ -20,20 +20,23 @@ def accept_client(serv_sock):
     try:
         con, _addr = serv_sock.accept()
         con.setblocking(0)
-        SOCK_LIST.append(con)
-        if len(SOCK_LIST) >= 101:
+        if len(SOCK_LIST) >= 256:
             send(con, "Max # users in server reached")
             con.close()
         else:
+            SOCK_LIST.append(con)
+            WRITE_LIST.append(con)
             send(con, "You are connected")
     except:
-        Print("Can't accept?")
+        print("Can't accept?")
 
 
 def take_username(con, serv_sock, write, username):
+    """Takes usernames from clients"""
     if not username:
         if con in SOCK_LIST:
             SOCK_LIST.remove(con)
+            WRITE_LIST.remove(con)
         con.close()
     elif any(username == user for user in
              USER_SOCK_DICT.values()):
@@ -96,10 +99,7 @@ def chat_server(port, ipnum):
                 accept_client(serv_sock)
                 print("There are {} clients".format(len(SOCK_LIST)))
             else:
-                try:
-                    msgsize, data = looprecv(sock, msgsize, data)
-                except TypeError as e:
-                    continue
+                msgsize, data = looprecv(sock, msgsize, data)
                 if len(data) == msgsize:
                     message = struct.unpack('!%ds' % msgsize, data)
                     message = message[0].decode('utf-8')

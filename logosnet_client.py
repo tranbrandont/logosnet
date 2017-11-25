@@ -5,6 +5,7 @@ import argparse
 import sys
 import select
 import struct
+import signal
 from helper import recv
 from helper import send
 from helper import looprecv
@@ -16,7 +17,7 @@ MAX_MSG = 1000
 
 def interrupted(_signum, _frame):
     """Signal handler for alarm"""
-    print("Didn't enter username within 60 seconds")
+    print("Did not enter username")
     sys.exit()
 
 
@@ -27,19 +28,38 @@ class Client:
         """Gets username, doesn't allow names over 10 chars
         or with white space"""
         username = ' '
+        data = bytearray()
+        msgsize = 0
+        signal.signal(signal.SIGALRM, interrupted)
+        signal.alarm(TIMEOUT)
         while ' ' in username or len(username) > MAX_USERNM:
             print("Enter username, max 10 chars: \r", )
-            i, _o, _e = select.select([sys.stdin], [], [], TIMEOUT)
-            if i:
-                username = sys.stdin.readline().rstrip('\n')
-            else:
-                print("Did not enter username")
-                sock.close()
-                sys.exit()
-            if ' ' in username:
-                print("No spaces allowed in username")
-            elif len(username) > 10:
-                print("Username can't be more than 10 chars")
+            i, _o, _e = select.select([sys.stdin, sock], [], [])
+            for sockpeer in i:
+                if sockpeer == sock:
+                    sys.stdout.write("I ma sock")
+                    sys.stdout.flush()
+                    msgsize, data = looprecv(sock, msgsize, data)
+                    if len(data) == msgsize:
+                        message = struct.unpack('!%ds' % msgsize, data)
+                        message = message[0].decode('utf-8')
+                        sys.stdout.write("\r" + message)
+                        sys.stdout.flush()
+                        # sys.stdout.write("> " + username + ": ")
+                        # sys.stdout.flush()
+                        msgsize = 0
+                        data = bytearray()
+                elif sockpeer == sys.stdin:
+                    username = sys.stdin.readline().rstrip('\n')
+                    signal.alarm(0)
+                    if ' ' in username:
+                        print("No spaces allowed in username")
+                        signal.signal(signal.SIGALRM, interrupted)
+                        signal.alarm(TIMEOUT)
+                    elif len(username) > 10:
+                        print("Username can't be more than 10 chars")
+                        signal.signal(signal.SIGALRM, interrupted)
+                        signal.alarm(TIMEOUT)
         return username
 
     def send_msg(self, sock, message):
