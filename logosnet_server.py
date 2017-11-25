@@ -48,6 +48,7 @@ def take_username(con, serv_sock, write, username):
         print("User {} connected".format(username))
         broadcast(serv_sock, con, write,
                   "User {} has joined\n".format(username))
+        send(con, "User {} has joined\n".format(username))
 
 
 def message_handle(message, sock, serv_sock, write):
