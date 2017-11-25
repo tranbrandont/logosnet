@@ -37,8 +37,6 @@ class Client:
             i, _o, _e = select.select([sys.stdin, sock], [], [])
             for sockpeer in i:
                 if sockpeer == sock:
-                    sys.stdout.write("I ma sock")
-                    sys.stdout.flush()
                     msgsize, data = looprecv(sock, msgsize, data)
                     if len(data) == msgsize:
                         message = struct.unpack('!%ds' % msgsize, data)

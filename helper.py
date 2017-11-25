@@ -49,9 +49,5 @@ def looprecv(sockpeer, msgsize, data):
     elif len(data) < msgsize:
         more = sockpeer.recv(2)
         data.extend(more)
-        print("data len is {}".format(len(data)))
-        print("data is ()=={}".format(data))
-        print("message size is {}".format(msgsize))
-
         return msgsize, data
 

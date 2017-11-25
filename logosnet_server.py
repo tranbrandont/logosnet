@@ -97,9 +97,12 @@ def chat_server(port, ipnum):
         for sock in read:
             if sock == serv_sock:
                 accept_client(serv_sock)
-                print("There are {} clients".format(len(SOCK_LIST)))
             else:
                 msgsize, data = looprecv(sock, msgsize, data)
+                print("data len is {}".format(len(data)))
+                print("data is ()=={}".format(data))
+                print("message size is {}".format(msgsize))
+
                 if len(data) == msgsize:
                     message = struct.unpack('!%ds' % msgsize, data)
                     message = message[0].decode('utf-8')
