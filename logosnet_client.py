@@ -79,7 +79,7 @@ class Client:
             print("Unable to connect" + str(err))
             sys.exit()
         socket_list = [sys.stdin, self.sock]
-        sys.stdout.write(username + ": ")
+        sys.stdout.write("> " + username + ": ")
         sys.stdout.flush()
         while 1:
             read, _write, _error = select.select(socket_list, [], [])
@@ -89,12 +89,14 @@ class Client:
                     if len(data) == msgsize:
                         message = struct.unpack('!%ds' % msgsize, data)
                         message = message[0].decode('utf-8')
-                        sys.stdout.write(message)
+                        sys.stdout.write("\r" + message)
+                        sys.stdout.flush()
+                        sys.stdout.write("> " + username + ": ")
                         sys.stdout.flush()
                         msgsize = 0
                         data = bytearray()
                 else:
-                    sys.stdout.write(username + ": ")
+                    sys.stdout.write("> " + username + ": ")
                     sys.stdout.flush()
                     message = sockpeer.readline()
                     self.send_msg(self.sock, message)

@@ -32,7 +32,6 @@ def accept_client(serv_sock):
 
 
 def take_username(con, serv_sock, write, username):
-    print(username)
     if not username:
         if con in SOCK_LIST:
             SOCK_LIST.remove(con)
@@ -40,7 +39,6 @@ def take_username(con, serv_sock, write, username):
     elif any(username == user for user in
            USER_SOCK_DICT.values()):
         send(con, "Notunique")
-        print("client connected Anonymous")
         USER_SOCK_DICT[con] = ' '
     else:
         USER_SOCK_DICT[con] = username
