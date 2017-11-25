@@ -32,8 +32,8 @@ class Client:
         msgsize = 0
         signal.signal(signal.SIGALRM, interrupted)
         signal.alarm(TIMEOUT)
+        print("Enter username, max 10 chars: \r",)
         while ' ' in username or len(username) > MAX_USERNM:
-            print("Enter username, max 10 chars: \r", )
             i, _o, _e = select.select([sys.stdin, sock], [], [])
             for sockpeer in i:
                 if sockpeer == sock:
@@ -54,10 +54,12 @@ class Client:
                         print("No spaces allowed in username")
                         signal.signal(signal.SIGALRM, interrupted)
                         signal.alarm(TIMEOUT)
+                        print("Enter username, max 10 chars: \r",)
                     elif len(username) > 10:
                         print("Username can't be more than 10 chars")
                         signal.signal(signal.SIGALRM, interrupted)
                         signal.alarm(TIMEOUT)
+                        print("Enter username, max 10 chars: \r",)
         return username
 
     def send_msg(self, sock, message):

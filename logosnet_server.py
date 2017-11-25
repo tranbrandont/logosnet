@@ -48,7 +48,6 @@ def take_username(con, serv_sock, write, username):
         print("User {} connected".format(username))
         broadcast(serv_sock, con, write,
                   "User {} has joined\n".format(username))
-        WRITE_LIST.append(con)
 
 
 def message_handle(message, sock, serv_sock, write):
@@ -83,6 +82,7 @@ def chat_server(port, ipnum):
     """Starts chat server"""
     msgsize = 0
     data = bytearray()
+    olddatalen = -1
     serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     serv_sock.setblocking(0)
@@ -98,13 +98,14 @@ def chat_server(port, ipnum):
             if sock == serv_sock:
                 accept_client(serv_sock)
             else:
+                olddatalen = len(data)
                 msgsize, data = looprecv(sock, msgsize, data)
                 print("data len is {}".format(len(data)))
                 print("data is ()=={}".format(data))
                 print("message size is {}".format(msgsize))
 
-                if len(data) == msgsize:
-                    message = struct.unpack('!%ds' % msgsize, data)
+                if len(data) == msgsize or olddatalen == len(data):
+                    message = struct.unpack('!%ds' % len(data), data)
                     message = message[0].decode('utf-8')
                     msgsize = 0
                     data = bytearray()

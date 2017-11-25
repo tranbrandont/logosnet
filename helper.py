@@ -19,7 +19,6 @@ def recv(connection):
 
 def send(connection, message):
     """Sends size of packet and then actual packet"""
-
     message = bytes(message, 'utf-8')
     strsize = len(message)
     message = struct.pack('!%ds' % strsize, message)
