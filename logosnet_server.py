@@ -89,7 +89,6 @@ def chat_server(port, ipnum):
     serv_sock.bind((ipnum, port))
     serv_sock.listen(100)
     SOCK_LIST.append(serv_sock)
-
     while 1:
         read, write, error = select.select(SOCK_LIST, [], SOCK_LIST)
         for sock in read:
@@ -97,8 +96,11 @@ def chat_server(port, ipnum):
                 accept_client(serv_sock)
                 print("There are {} clients".format(len(SOCK_LIST)))
             else:
-                print(USER_SOCK_DICT.get(sock))
-                msgsize, data = looprecv(sock, msgsize, data)
+                print(data)
+                try:
+                    msgsize, data = looprecv(sock, msgsize, data)
+                except TypeError as e:
+                    continue
                 if len(data) == msgsize:
                     message = struct.unpack('!%ds' % msgsize, data)
                     message = message[0].decode('utf-8')
