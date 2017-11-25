@@ -36,7 +36,7 @@ def take_username(con, serv_sock, write, username):
             SOCK_LIST.remove(con)
         con.close()
     elif any(username == user for user in
-           USER_SOCK_DICT.values()):
+             USER_SOCK_DICT.values()):
         send(con, "Notunique")
         USER_SOCK_DICT[con] = ' '
     else:
@@ -95,6 +95,7 @@ def chat_server(port, ipnum):
         for sock in read:
             if sock == serv_sock:
                 accept_client(serv_sock)
+                print("There are {} clients".format(len(SOCK_LIST)))
             else:
                 print(USER_SOCK_DICT.get(sock))
                 msgsize, data = looprecv(sock, msgsize, data)
