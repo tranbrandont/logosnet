@@ -101,10 +101,6 @@ def chat_server(port, ipnum):
             else:
                 olddatalen = len(data)
                 msgsize, data = looprecv(sock, msgsize, data)
-                print("data len is {}".format(len(data)))
-                print("data is ()=={}".format(data))
-                print("message size is {}".format(msgsize))
-
                 if len(data) == msgsize or olddatalen == len(data):
                     message = struct.unpack('!%ds' % len(data), data)
                     message = message[0].decode('utf-8')
