@@ -97,9 +97,6 @@ class Client:
             for sockpeer in read:
                 if sockpeer == self.sock:
                     msgsize, data = looprecv(sockpeer, msgsize, data)
-                    print(msgsize)
-                    print(len(data))
-                    print(data)
                     if msgsize == -1:
                         socket_list.remove(sockpeer)
                         print("Lost connection to server")
