@@ -39,7 +39,9 @@ class Client:
             sys.stdout.write("Enter username, max 10 chars: \n\r", )
             sys.stdout.flush()
         else:
-            send(self.sock, username)
+            if send(self.sock, username) == -1:
+                self.sock.close()
+                sys.exit()
         return username
 
     def decode_msg(self, msgsize, data):
@@ -64,13 +66,15 @@ class Client:
             # sys.stdout.flush()
         return 0, bytearray()
 
-    def send_msg(self, sock, message):
+    def send_msg(self, message):
         """Handles sending the message and checking for exit and msg len"""
         if message.strip() == "exit()":
             self.sock.close()
             sys.exit()
         if len(message) < MAX_MSG:
-            send(sock, message)
+            if send(self.sock, message) == -1:
+                self.sock.close()
+                sys.exit()
         else:
             print("Message too big")
 
@@ -104,7 +108,7 @@ class Client:
                         sys.stdout.write("> " + username + ": ")
                         sys.stdout.flush()
                         message = sockpeer.readline()
-                        self.send_msg(self.sock, message)
+                        self.send_msg(message)
                     else:
                         username = self.take_user(sockpeer)
 

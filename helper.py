@@ -1,6 +1,7 @@
 #!/usr/bin/python           # This does sending and receiving
 """Helps with receiving and sending to client and server"""
 import struct
+import socket
 
 
 def send(connection, message):
@@ -10,8 +11,12 @@ def send(connection, message):
     message = struct.pack('!%ds' % strsize, message)
     psize = len(message)
     psize = struct.pack('!i', psize)
-    connection.send(psize)
-    connection.send(message)
+    try:
+        connection.send(psize)
+        connection.send(message)
+        return 1
+    except socket.error:
+        return -1
 
 
 def looprecv(sockpeer, msgsize, data):

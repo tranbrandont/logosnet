@@ -28,7 +28,13 @@ def accept_client(serv_sock):
             SOCK_LIST.append(con)
             WRITE_LIST.append(con)
             USER_MSG_DICT[con] = [0, bytearray()]
-            send(con, "You are connected\n")
+            if send(con, "You are connected\n") == -1:
+                SOCK_LIST.remove(con)
+                WRITE_LIST.remove(con)
+                broadcast(serv_sock, con, WRITE_LIST, "User {} has left\n".format(
+                    USER_SOCK_DICT.get(con) if USER_SOCK_DICT.get(
+                        con) is not None else "Anonymous"))
+                del USER_MSG_DICT[con]
     except:
         print("Can't accept?")
 
@@ -42,13 +48,22 @@ def take_username(con, serv_sock, write, username):
         con.close()
     elif any(username == user for user in
              USER_SOCK_DICT.values()):
-        send(con, "Notunique")
+        if send(con, "Notunique") == -1:
+            if con in SOCK_LIST:
+                SOCK_LIST.remove(con)
+                WRITE_LIST.remove(con)
+            con.close()
     else:
         USER_SOCK_DICT[con] = username
-        send(con, "Unique")
-        broadcast(serv_sock, con, write,
-                  "User {} has joined\n".format(username))
-        send(con, "User {} has joined\n".format(username))
+        if send(con, "Unique") == -1:
+            if con in SOCK_LIST:
+                SOCK_LIST.remove(con)
+                WRITE_LIST.remove(con)
+            con.close()
+        else:
+            broadcast(serv_sock, con, write,
+                      "User {} has joined\n".format(username))
+            send(con, "User {} has joined\n".format(username))
 
 
 def message_handle(message, sock, serv_sock, write):
@@ -60,10 +75,22 @@ def message_handle(message, sock, serv_sock, write):
             friend = privatemessage[0][1:len(privatemessage[0])]
             for user, name in USER_SOCK_DICT.items():
                 if friend == name:
-                    send(user, "> " + USER_SOCK_DICT.get(sock) + ": " + message)
+                    if send(user, "> " + USER_SOCK_DICT.get(sock) + ": " + message) == -1:
+                        if sock in SOCK_LIST:
+                            SOCK_LIST.remove(sock)
+                            WRITE_LIST.remove(sock)
+                            del USER_SOCK_DICT[sock]
+                            del USER_MSG_DICT[sock]
+                        sock.close()
                     notfound = 0
             if notfound:
-                send(sock, "User " + friend + " not connected\n")
+                if send(sock, "User " + friend + " not connected\n") == -1:
+                    if sock in SOCK_LIST:
+                        SOCK_LIST.remove(sock)
+                        WRITE_LIST.remove(sock)
+                        del USER_SOCK_DICT[sock]
+                        del USER_MSG_DICT[sock]
+                    sock.close()
         else:
             broadcast(serv_sock, sock, write,
                       "> " + USER_SOCK_DICT.get(sock) + ': ' + message)
@@ -76,6 +103,7 @@ def message_handle(message, sock, serv_sock, write):
                 USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(
                     sock) is not None else "Anonymous"))
             del USER_SOCK_DICT[sock]
+            del USER_MSG_DICT[sock]
         sock.close()
 
 
@@ -126,6 +154,7 @@ def chat_server(port, ipnum):
             if sock in WRITE_LIST:
                 WRITE_LIST.remove(sock)
             USER_SOCK_DICT.pop(sock)
+            USER_MSG_DICT.pop(sock)
             sock.close()
 
 
@@ -133,14 +162,13 @@ def broadcast(serv_sock, sock, write, message):
     """sends messages to all clients except sending client"""
     for sockpeer in write:
         if sockpeer != serv_sock and sockpeer != sock:
-            try:
-                send(sockpeer, message)
-            except:
+            if send(sockpeer, message) == -1:
                 sockpeer.close()
                 if sockpeer in SOCK_LIST:
                     SOCK_LIST.remove(sockpeer)
                     WRITE_LIST.remove(sockpeer)
                     USER_SOCK_DICT.pop(sockpeer)
+                    USER_MSG_DICT.pop(sockpeer)
 
 
 def main():
