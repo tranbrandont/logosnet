@@ -22,6 +22,48 @@ def interrupted(_signum, _frame):
 
 class Client:
     """Creates clients for chat service"""
+    def take_user(self, sockpeer):
+        """Takes usernames"""
+        username = sockpeer.readline().rstrip('\n')
+        signal.alarm(0)
+        if ' ' in username:
+            print("No spaces allowed in username\n")
+            signal.signal(signal.SIGALRM, interrupted)
+            signal.alarm(TIMEOUT)
+            sys.stdout.write("Enter username, max 10 chars: \n\r", )
+            sys.stdout.flush()
+        elif len(username) > 10:
+            sys.stdout.write("Username can't be more than 10 chars")
+            signal.signal(signal.SIGALRM, interrupted)
+            signal.alarm(TIMEOUT)
+            sys.stdout.write("Enter username, max 10 chars: \n\r", )
+            sys.stdout.flush()
+        else:
+            send(self.sock, username)
+        return username
+
+    def decode_msg(self, msgsize, data):
+        """Decodes messages and decides what to do with them"""
+        message = struct.unpack('!%ds' % msgsize, data)
+        message = message[0].decode('utf-8')
+        if message == "Unique":
+            print("Username confirmed")
+            self.confirmed = True
+        elif message == "Max # users in server reached\n":
+            print(message)
+            sys.exit()
+        elif message == "Notunique":
+            sys.stdout.write("Username is already in use\n")
+            sys.stdout.write("Enter username, max 10 chars: \n\r", )
+            sys.stdout.flush()
+            signal.alarm(TIMEOUT)
+        else:
+            sys.stdout.write("\r" + message)
+            sys.stdout.flush()
+            # sys.stdout.write("> " + username + ": ")
+            # sys.stdout.flush()
+        return 0, bytearray()
+
     def send_msg(self, sock, message):
         """Handles sending the message and checking for exit and msg len"""
         if message.strip() == "exit()":
@@ -56,26 +98,7 @@ class Client:
                         print("Lost connection to server")
                         sys.exit()
                     if len(data) == msgsize:
-                        message = struct.unpack('!%ds' % msgsize, data)
-                        message = message[0].decode('utf-8')
-                        if message == "Unique":
-                            print("Username confirmed")
-                            self.confirmed = True
-                        elif message == "Max # users in server reached\n":
-                            print(message)
-                            sys.exit()
-                        elif message == "Notunique":
-                            sys.stdout.write("Username is already in use\n")
-                            sys.stdout.write("Enter username, max 10 chars: \n\r", )
-                            sys.stdout.flush()
-                            signal.alarm(TIMEOUT)
-                        else:
-                            sys.stdout.write("\r" + message)
-                            sys.stdout.flush()
-                            #sys.stdout.write("> " + username + ": ")
-                            #sys.stdout.flush()
-                        msgsize = 0
-                        data = bytearray()
+                        msgsize, data = self.decode_msg(msgsize, data)
                 else:
                     if self.confirmed is True:
                         sys.stdout.write("> " + username + ": ")
@@ -83,22 +106,7 @@ class Client:
                         message = sockpeer.readline()
                         self.send_msg(self.sock, message)
                     else:
-                        username = sockpeer.readline().rstrip('\n')
-                        signal.alarm(0)
-                        if ' ' in username:
-                            print("No spaces allowed in username\n")
-                            signal.signal(signal.SIGALRM, interrupted)
-                            signal.alarm(TIMEOUT)
-                            sys.stdout.write("Enter username, max 10 chars: \n\r",)
-                            sys.stdout.flush()
-                        elif len(username) > 10:
-                            sys.stdout.write("Username can't be more than 10 chars")
-                            signal.signal(signal.SIGALRM, interrupted)
-                            signal.alarm(TIMEOUT)
-                            sys.stdout.write("Enter username, max 10 chars: \n\r",)
-                            sys.stdout.flush()
-                        else:
-                            send(self.sock, username)
+                        username = self.take_user(sockpeer)
 
 
 if __name__ == "__main__":

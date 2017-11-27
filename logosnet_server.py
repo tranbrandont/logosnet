@@ -15,7 +15,6 @@ USER_SOCK_DICT = {}
 USER_MSG_DICT = {}
 
 
-
 def accept_client(serv_sock):
     """Accepts clients into the server or rejects if names aren't unique or
     max number of users in server"""
@@ -49,6 +48,7 @@ def take_username(con, serv_sock, write, username):
         send(con, "Unique")
         broadcast(serv_sock, con, write,
                   "User {} has joined\n".format(username))
+        send(con, "User {} has joined\n".format(username))
 
 
 def message_handle(message, sock, serv_sock, write):
