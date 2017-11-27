@@ -129,12 +129,13 @@ def chat_server(port, ipnum):
                 msgsize, data = looprecv(sock, msgsize, data)
                 USER_MSG_DICT[sock] = [msgsize, data]
                 if msgsize == -1:
-                    SOCK_LIST.remove(sock)
-                    if sock in WRITE_LIST:
-                        WRITE_LIST.remove(sock)
+                    write = WRITE_LIST
                     broadcast(serv_sock, sock, write, "User {} has left\n".format(
                         USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(
                             sock) is not None else "Anonymous"))
+                    SOCK_LIST.remove(sock)
+                    if sock in WRITE_LIST:
+                        WRITE_LIST.remove(sock)
                     del USER_SOCK_DICT[sock]
                     del USER_MSG_DICT[sock]
                     sock.close()
@@ -163,7 +164,9 @@ def chat_server(port, ipnum):
 def broadcast(serv_sock, sock, write, message):
     """sends messages to all clients except sending client"""
     for sockpeer in write:
+        print(message + " in loop")
         if sockpeer != serv_sock and sockpeer != sock:
+            print(USER_SOCK_DICT.get(sockpeer))
             if send(sockpeer, message) == -1:
                 sockpeer.close()
                 if sockpeer in SOCK_LIST:
