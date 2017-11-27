@@ -39,6 +39,7 @@ def looprecv(sockpeer, msgsize, data):
             sockpeer.close()
             return -1, data
         if len(data) >= 4:
+            print(data)
             msgsize = struct.unpack('!i', data)[0]
             data = bytearray()
         return msgsize, data

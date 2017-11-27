@@ -12,6 +12,8 @@ from helper import looprecv
 SOCK_LIST = []
 WRITE_LIST = []
 USER_SOCK_DICT = {}
+USER_MSG_DICT = {}
+
 
 
 def accept_client(serv_sock):
@@ -26,6 +28,7 @@ def accept_client(serv_sock):
         else:
             SOCK_LIST.append(con)
             WRITE_LIST.append(con)
+            USER_MSG_DICT[con] = [0, bytearray()]
             send(con, "You are connected")
     except:
         print("Can't accept?")
@@ -45,7 +48,6 @@ def take_username(con, serv_sock, write, username):
     else:
         USER_SOCK_DICT[con] = username
         send(con, "Unique")
-        print("User {} connected".format(username))
         broadcast(serv_sock, con, write,
                   "User {} has joined\n".format(username))
         send(con, "User {} has joined\n".format(username))
@@ -81,9 +83,6 @@ def message_handle(message, sock, serv_sock, write):
 
 def chat_server(port, ipnum):
     """Starts chat server"""
-    msgsize = 0
-    data = bytearray()
-    olddatalen = -1
     serv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     serv_sock.setblocking(0)
@@ -99,13 +98,16 @@ def chat_server(port, ipnum):
             if sock == serv_sock:
                 accept_client(serv_sock)
             else:
-                olddatalen = len(data)
+                msgsize = USER_MSG_DICT.get(sock)[0]
+                data = USER_MSG_DICT.get(sock)[1]
                 msgsize, data = looprecv(sock, msgsize, data)
-                if len(data) == msgsize or olddatalen == len(data):
+                USER_MSG_DICT[sock] = [msgsize, data]
+                if len(data) == msgsize:
                     message = struct.unpack('!%ds' % len(data), data)
                     message = message[0].decode('utf-8')
                     msgsize = 0
                     data = bytearray()
+                    USER_MSG_DICT[sock] = [msgsize, data]
                     if USER_SOCK_DICT.get(sock) == ' ' or USER_SOCK_DICT.get(sock) is None:
                         write = WRITE_LIST
                         take_username(sock, serv_sock, write, message)
