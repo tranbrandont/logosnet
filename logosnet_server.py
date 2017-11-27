@@ -29,7 +29,7 @@ def accept_client(serv_sock):
             SOCK_LIST.append(con)
             WRITE_LIST.append(con)
             USER_MSG_DICT[con] = [0, bytearray()]
-            send(con, "You are connected")
+            send(con, "You are connected\n")
     except:
         print("Can't accept?")
 
@@ -49,7 +49,6 @@ def take_username(con, serv_sock, write, username):
         send(con, "Unique")
         broadcast(serv_sock, con, write,
                   "User {} has joined\n".format(username))
-        send(con, "User {} has joined\n".format(username))
 
 
 def message_handle(message, sock, serv_sock, write):
@@ -105,8 +104,9 @@ def chat_server(port, ipnum):
                     SOCK_LIST.remove(sock)
                     if sock in WRITE_LIST:
                         WRITE_LIST.remove(sock)
-                    USER_SOCK_DICT.pop(sock)
-                    USER_MSG_DICT.pop(sock)
+                    if sock in USER_SOCK_DICT:
+                        USER_SOCK_DICT.pop(sock)
+                        USER_MSG_DICT.pop(sock)
                     sock.close()
                 if len(data) == msgsize:
                     message = struct.unpack('!%ds' % len(data), data)
