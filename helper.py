@@ -3,20 +3,6 @@
 import struct
 
 
-def recv(connection):
-    """reads size of incoming packet and then reads packet"""
-
-    try:
-        psize = connection.recv(4)
-        psize = struct.unpack('!i', psize)
-        message = connection.recv(psize[0])
-        message = struct.unpack('!%ds' % psize[0], message)
-        message = message[0].decode('utf-8')
-        return message
-    except TimeoutError:
-        print("Timeout")
-
-
 def send(connection, message):
     """Sends size of packet and then actual packet"""
     message = bytes(message, 'utf-8')
@@ -30,25 +16,14 @@ def send(connection, message):
 
 def looprecv(sockpeer, msgsize, data):
     """accepts packets 2 bytes at a time"""
-    if msgsize == 0:
-        if len(data) < 4:
-            more = sockpeer.recv(2)
-            data.extend(more)
-        if not more:
-            print("Closing client")
-            sockpeer.close()
-            return -1, data
-        if len(data) >= 4:
-            print(data)
+    more = sockpeer.recv(2)
+    if not more:
+        print("Closing client")
+        sockpeer.close()
+        return -1, data
+    else:
+        data.extend(more)
+        if len(data) == 4 and msgsize == 0:
             msgsize = struct.unpack('!i', data)[0]
             data = bytearray()
         return msgsize, data
-    elif msgsize - len(data) == 1:
-        more = sockpeer.recv(1)
-        data.extend(more)
-        return msgsize, data
-    elif len(data) < msgsize:
-        more = sockpeer.recv(2)
-        data.extend(more)
-        return msgsize, data
-

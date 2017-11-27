@@ -44,7 +44,6 @@ def take_username(con, serv_sock, write, username):
     elif any(username == user for user in
              USER_SOCK_DICT.values()):
         send(con, "Notunique")
-        USER_SOCK_DICT[con] = ' '
     else:
         USER_SOCK_DICT[con] = username
         send(con, "Unique")
@@ -102,6 +101,13 @@ def chat_server(port, ipnum):
                 data = USER_MSG_DICT.get(sock)[1]
                 msgsize, data = looprecv(sock, msgsize, data)
                 USER_MSG_DICT[sock] = [msgsize, data]
+                if msgsize == -1:
+                    SOCK_LIST.remove(sock)
+                    if sock in WRITE_LIST:
+                        WRITE_LIST.remove(sock)
+                    USER_SOCK_DICT.pop(sock)
+                    USER_MSG_DICT.pop(sock)
+                    sock.close()
                 if len(data) == msgsize:
                     message = struct.unpack('!%ds' % len(data), data)
                     message = message[0].decode('utf-8')
