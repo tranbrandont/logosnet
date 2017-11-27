@@ -21,7 +21,10 @@ def send(connection, message):
 
 def looprecv(sockpeer, msgsize, data):
     """accepts packets 2 bytes at a time"""
-    more = sockpeer.recv(2)
+    if (msgsize - len(data)) == 1:
+        more = sockpeer.recv(1)
+    else:
+        more = sockpeer.recv(2)
     if not more:
         print("Closing client")
         sockpeer.close()

@@ -132,9 +132,11 @@ def chat_server(port, ipnum):
                     SOCK_LIST.remove(sock)
                     if sock in WRITE_LIST:
                         WRITE_LIST.remove(sock)
-                    if sock in USER_SOCK_DICT:
-                        USER_SOCK_DICT.pop(sock)
-                        USER_MSG_DICT.pop(sock)
+                    broadcast(serv_sock, sock, write, "User {} has left\n".format(
+                        USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(
+                            sock) is not None else "Anonymous"))
+                    del USER_SOCK_DICT[sock]
+                    del USER_MSG_DICT[sock]
                     sock.close()
                 if len(data) == msgsize:
                     message = struct.unpack('!%ds' % len(data), data)
