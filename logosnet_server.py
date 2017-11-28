@@ -42,9 +42,9 @@ def accept_client(serv_sock):
             WRITE_LIST.append(con)
             USER_MSG_DICT[con] = [0, bytearray()]
             if send(con, "You are connected\n") == -1:
-                broadcast(serv_sock, con, WRITE_LIST, "User {} has left\n".format(
-                    USER_SOCK_DICT.get(con) if USER_SOCK_DICT.get(
-                        con) is not None else "Anonymous"))
+                broadcast(serv_sock, con, WRITE_LIST, "User {} has left\n".
+                          format(USER_SOCK_DICT.get(con) if USER_SOCK_DICT.get(
+                           con) is not None else "Anonymous"))
                 rmv_client(con)
     except:
         print("Can't accept?")
@@ -77,7 +77,8 @@ def message_handle(message, sock, serv_sock, write):
             friend = privatemessage[0][1:len(privatemessage[0])]
             for user, name in USER_SOCK_DICT.items():
                 if friend == name:
-                    if send(user, "> " + USER_SOCK_DICT.get(sock) + ": " + message) == -1:
+                    if send(user, "> " + USER_SOCK_DICT.get(
+                            sock) + ": " + message) == -1:
                         if sock in SOCK_LIST:
                             SOCK_LIST.remove(sock)
                             WRITE_LIST.remove(sock)
@@ -131,7 +132,8 @@ def chat_server(port, ipnum):
                     msgsize = 0
                     data = bytearray()
                     USER_MSG_DICT[sock] = [msgsize, data]
-                    if USER_SOCK_DICT.get(sock) == ' ' or USER_SOCK_DICT.get(sock) is None:
+                    if USER_SOCK_DICT.get(sock) == ' ' or \
+                            USER_SOCK_DICT.get(sock) is None:
                         write = WRITE_LIST
                         take_username(sock, serv_sock, write, message)
                     else:
@@ -145,8 +147,7 @@ def chat_server(port, ipnum):
 def broadcast(serv_sock, sock, write, message):
     """sends messages to all clients except sending client"""
     for sockpeer in write:
-        if sockpeer != serv_sock and sockpeer != sock:
-            print(USER_SOCK_DICT.get(sockpeer))
+        if sockpeer != serv_sock and sockpeer != sock and sockpeer is not None:
             if send(sockpeer, message) == -1:
                 rmv_client(sock)
 

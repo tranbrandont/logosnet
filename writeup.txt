@@ -1,0 +1,10 @@
+Brandon Tran
+
+1. The part of my code that isn't working is the code part of the last test testing the server with 100 clients. I'm unable to get the correct output even though I can reach user 100 connecting, and I suspect it has something to do with clients disconnecting causing the server to throw an error and close and cause other clients to close and also concurrency issues, but I'm not sure if this is what's happening or not. I thought that I fixed the concurrency issues, but there might be an issue in my implementation of the solution, so it could be something else. Given more time I'd probably try to look deeper into my code and tests to find what's causing this issue. 
+
+
+
+
+2. I tested that my code was working by writing down each of the various situations that could pop up and going through each, such as multiple people connecting, connecting with an already in use username, private messages, disconnecting at various points within the program, etc. To figure out a lot of my issues, I printed the bytestream that I was receiving and looked for what errors could have popped up. 
+
+3. The most challenging part of the assignment was handling select, and keeping concurrency issues out. Additionally, integrating recv(2) when I was originally using multiple recv() was a big issue as I had to change a lot of my code to fit with that usage. Also, figuring out how to maintain 100 clients is a big issue that I wasn't able to solve.
