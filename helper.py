@@ -16,6 +16,7 @@ def send(connection, message):
         connection.send(message)
         return 1
     except socket.error:
+        connection.close()
         return -1
 
 

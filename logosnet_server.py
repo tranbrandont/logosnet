@@ -44,7 +44,7 @@ def accept_client(serv_sock):
             if send(con, "You are connected\n") == -1:
                 broadcast(serv_sock, con, WRITE_LIST, "User {} has left\n".
                           format(USER_SOCK_DICT.get(con) if USER_SOCK_DICT.get(
-                           con) is not None else "Anonymous"))
+                              con) is not None else "Anonymous"))
                 rmv_client(con)
     except:
         print("Can't accept?")
@@ -79,12 +79,7 @@ def message_handle(message, sock, serv_sock, write):
                 if friend == name:
                     if send(user, "> " + USER_SOCK_DICT.get(
                             sock) + ": " + message) == -1:
-                        if sock in SOCK_LIST:
-                            SOCK_LIST.remove(sock)
-                            WRITE_LIST.remove(sock)
-                            del USER_SOCK_DICT[sock]
-                            del USER_MSG_DICT[sock]
-                        sock.close()
+                        rmv_client(sock)
                     notfound = 0
             if notfound:
                 if send(sock, "User " + friend + " not connected\n") == -1:
