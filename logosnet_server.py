@@ -145,7 +145,6 @@ def chat_server(port, ipnum):
 def broadcast(serv_sock, sock, write, message):
     """sends messages to all clients except sending client"""
     for sockpeer in write:
-        print(message + " in loop")
         if sockpeer != serv_sock and sockpeer != sock:
             print(USER_SOCK_DICT.get(sockpeer))
             if send(sockpeer, message) == -1:
