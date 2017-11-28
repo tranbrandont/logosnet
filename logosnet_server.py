@@ -124,7 +124,7 @@ def chat_server(port, ipnum):
                     broadcast(serv_sock, sock, write, "User {} has left\n".format(
                         USER_SOCK_DICT.get(sock) if USER_SOCK_DICT.get(
                             sock) is not None else "Anonymous"))
-
+                    rmv_client(sock)
                 if len(data) == msgsize:
                     message = struct.unpack('!%ds' % len(data), data)
                     message = message[0].decode('utf-8')
